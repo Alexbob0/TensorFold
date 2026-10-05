@@ -62,8 +62,9 @@ def test_dsml_tool_calls_parse_and_hide():
     assert json.loads(calls[1]["function"]["arguments"]) == {"q": "rain"}
     assert hide_tool_calls(reply, finished=True).strip() == "Checking."
     assert "DSML" not in hide_tool_calls(reply[:30], finished=False)
-    unknown = reply.replace('"search"', '"other"')
-    assert parse_tool_calls_from_content(unknown, tools) == (unknown.strip(), None)
+    unknown = reply.replace('"search"', '"other"')         # a tool the request did not offer goes out as a call (#256)
+    content, calls = parse_tool_calls_from_content(unknown, tools)
+    assert content == "Checking." and [c["function"]["name"] for c in calls] == ["get_weather", "other"]
 
 
 class SpecialEncoder:
